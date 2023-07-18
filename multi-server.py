@@ -37,7 +37,8 @@ class Game:
         # Send board info to the player
         conn = player['connection']
         data = json.dumps(board_info)
-        conn.sendall(data.encode())
+
+        conn.send(data.encode())
 
     def has_lifeline(self,player_id):
         return self.players[player_id]['lifeline']
@@ -94,110 +95,211 @@ class Game:
         ]
         self.questions['A'] = random.sample(level_a_questions, 3)
 
-        
-        # Level B questions
-        # level_b_questions = [
-        #     {
-        #         'id' : 1,
-        #         'question': 'What is the capital city of Australia?',
-        #         'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
-        #         'correct': 'B',
-        #         'reduced_options' : ['Canberra','Perth'],
-        #         'type' : 'question'
-        #     },
-        #     {
-        #         'id' : 2,
-        #         'question': 'Which country is famous for the Taj Mahal?',
-        #         'options': ['India', 'China', 'Egypt', 'Italy'],
-        #         'correct': 'A',
-        #         'type' : 'question',
-        #         'reduced_options' : ['India','Egypt'],
-        #     },
-        #     {
-        #         'id' : 3,
-        #         'question': 'Who wrote the novel "1984"?',
-        #         'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
-        #         'correct': 'A',
-        #         'reduced_options' : ['George Orwell','Jane Austen'],
-        #         'type' : 'question'
-        #     }
-        # ]
-        # self.questions['B'] = random.sample(level_b_questions, 3)
-        
         # Level C questions
         level_c_questions = [
-            {
-                'id' : 1,
-                'question': 'Who wrote the play "Romeo and Juliet"?',
-                'options': ['William Shakespeare', 'Charles Dickens', 'Jane Austen', 'F. Scott Fitzgerald'],
-                'correct': 'A',
-                'reduced_options' : ['William Shakespeare','Jane Austen'],
-                'reduced_correct' : 'A',
-                'type' : 'question'
-            },
-            {
-                'id' : 2,
-                'question': 'Which animal is the largest living mammal?',
-                'options': ['Blue whale', 'African elephant', 'Giraffe', 'Hippopotamus'],
-                'reduced_options' : ['Blue whale','African elephant'],
-                'correct': 'A',
-                'reduced_correct' : 'A',
-                'type' : 'question'
-            },
-            {
-                'question': 'What is the chemical symbol for gold?',
-                'options': ['Au', 'Ag', 'Fe', 'Hg'],
-                'correct': 'A',
-                'reduced_options' : ['Au','Fe'],
-                'reduced_correct' : 'A',
-                'type' : 'question'
-            },
-            {
-                'id' : 3,
-                'question': 'What is the largest organ in the human body?',
-                'options': ['Liver', 'Heart', 'Skin', 'Brain'],
-                'reduced_options' : ['Skin','Brain'],
-                'reduced_correct' : 'A',
-                'correct': 'C',
-                'type' : 'question'
-            },
-            {
-                'question': 'Who discovered penicillin?',
-                'options': ['Alexander Fleming', 'Marie Curie', 'Albert Einstein', 'Isaac Newton'],
-                'reduced_options' : ['Alexander Fleming','Albert Einstein'],
-                'correct': 'A',
-                'reduced_correct' : 'A',
-                'type' : 'question'
-            },
-            {
-                'id' : 1,
-                'question': 'What is the capital city of Australia?',
-                'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
-                'correct': 'B',
-                'reduced_correct' : 'A',
-                'reduced_options' : ['Canberra','Perth'],
-                'type' : 'question'
-            },
-            {
-                'id' : 2,
-                'question': 'Which country is famous for the Taj Mahal?',
-                'options': ['India', 'China', 'Egypt', 'Italy'],
-                'correct': 'A',
-                'reduced_correct' : 'A',
-                'type' : 'question',
-                'reduced_options' : ['India','Egypt'],
-            },
-            {
-                'id' : 3,
-                'question': 'Who wrote the novel "1984"?',
-                'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
-                'correct': 'A',
-                'reduced_correct' : 'A',
-                'reduced_options' : ['George Orwell','Jane Austen'],
-                'type' : 'question'
-            }         
+        {
+            'question': 'Who wrote the play "Romeo and Juliet"?',
+            'options': ['William Shakespeare', 'Charles Dickens', 'Jane Austen', 'F. Scott Fitzgerald'],
+            'correct': 'A',
+            'reduced_options': ['William Shakespeare', 'Jane Austen'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which animal is the largest living mammal?',
+            'options': ['Blue whale', 'African elephant', 'Giraffe', 'Hippopotamus'],
+            'reduced_options': ['Blue whale', 'African elephant'],
+            'correct': 'A',
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the chemical symbol for gold?',
+            'options': ['Au', 'Ag', 'Fe', 'Hg'],
+            'correct': 'A',
+            'reduced_options': ['Au', 'Fe'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the largest organ in the human body?',
+            'options': ['Liver', 'Heart', 'Skin', 'Brain'],
+            'reduced_options': ['Skin', 'Brain'],
+            'reduced_correct': 'A',
+            'correct': 'C',
+            'type': 'question'
+        },
+        {
+            'question': 'Who discovered penicillin?',
+            'options': ['Alexander Fleming', 'Marie Curie', 'Albert Einstein', 'Isaac Newton'],
+            'reduced_options': ['Alexander Fleming', 'Albert Einstein'],
+            'correct': 'A',
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the capital city of Australia?',
+            'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
+            'correct': 'B',
+            'reduced_correct': 'A',
+            'reduced_options': ['Canberra', 'Perth'],
+            'type': 'question'
+        },
+        {
+            'question': 'Which country is famous for the Taj Mahal?',
+            'options': ['India', 'China', 'Egypt', 'Italy'],
+            'correct': 'A',
+            'reduced_correct': 'A',
+            'type': 'question',
+            'reduced_options': ['India', 'Egypt'],
+        },
+        {
+            'question': 'Who wrote the novel "1984"?',
+            'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
+            'correct': 'A',
+            'reduced_correct': 'A',
+            'reduced_options': ['George Orwell', 'Jane Austen'],
+            'type': 'question'
+        },
+        {
+            'question': 'What is the tallest mountain in the world?',
+            'options': ['Mount Everest', 'K2', 'Kangchenjunga', 'Makalu'],
+            'correct': 'A',
+            'reduced_options': ['Mount Everest', 'Kangchenjunga'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which planet is known as the "Red Planet"?',
+            'options': ['Mars', 'Jupiter', 'Venus', 'Saturn'],
+            'correct': 'A',
+            'reduced_options': ['Mars', 'Venus'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Who is the author of the famous novel "Pride and Prejudice"?',
+            'options': ['Jane Austen', 'Charles Dickens', 'Charlotte Brontë', 'Emily Brontë'],
+            'correct': 'A',
+            'reduced_options': ['Jane Austen', 'Charlotte Brontë'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which country won the FIFA World Cup in 2018?',
+            'options': ['France', 'Brazil', 'Germany', 'Argentina'],
+            'correct': 'A',
+            'reduced_options': ['France', 'Germany'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Who painted the famous artwork "The Starry Night"?',
+            'options': ['Vincent van Gogh', 'Leonardo da Vinci', 'Pablo Picasso', 'Claude Monet'],
+            'correct': 'A',
+            'reduced_options': ['Vincent van Gogh', 'Pablo Picasso'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the largest ocean in the world?',
+            'options': ['Pacific Ocean', 'Atlantic Ocean', 'Indian Ocean', 'Arctic Ocean'],
+            'correct': 'A',
+            'reduced_options': ['Pacific Ocean', 'Indian Ocean'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which country is famous for the Great Wall?',
+            'options': ['China', 'Japan', 'India', 'Italy'],
+            'correct': 'A',
+            'reduced_options': ['China', 'India'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which scientist developed the theory of relativity?',
+            'options': ['Albert Einstein', 'Isaac Newton', 'Galileo Galilei', 'Marie Curie'],
+            'correct': 'A',
+            'reduced_options': ['Albert Einstein', 'Galileo Galilei'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the currency of Japan?',
+            'options': ['Yen', 'Euro', 'Dollar', 'Pound'],
+            'correct': 'A',
+            'reduced_options': ['Yen', 'Dollar'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Who is the Greek god of thunder?',
+            'options': ['Zeus', 'Poseidon', 'Hades', 'Apollo'],
+            'correct': 'A',
+            'reduced_options': ['Zeus', 'Hades'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which country is famous for the Eiffel Tower?',
+            'options': ['France', 'Spain', 'Italy', 'United Kingdom'],
+            'correct': 'A',
+            'reduced_options': ['France', 'Italy'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Who wrote the novel "To Kill a Mockingbird"?',
+            'options': ['Harper Lee', 'J.D. Salinger', 'F. Scott Fitzgerald', 'Mark Twain'],
+            'correct': 'A',
+            'reduced_options': ['Harper Lee', 'F. Scott Fitzgerald'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the chemical symbol for sodium?',
+            'options': ['Na', 'Ca', 'Fe', 'K'],
+            'correct': 'A',
+            'reduced_options': ['Na', 'Fe'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Which planet is known as the "Blue Planet"?',
+            'options': ['Earth', 'Mars', 'Venus', 'Neptune'],
+            'correct': 'A',
+            'reduced_options': ['Earth', 'Venus'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Who painted the famous artwork "The Last Supper"?',
+            'options': ['Leonardo da Vinci', 'Vincent van Gogh', 'Pablo Picasso', 'Michelangelo'],
+            'correct': 'A',
+            'reduced_options': ['Leonardo da Vinci', 'Pablo Picasso'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'What is the capital city of Canada?',
+            'options': ['Ottawa', 'Toronto', 'Vancouver', 'Montreal'],
+            'correct': 'A',
+            'reduced_options': ['Ottawa', 'Vancouver'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        },
+        {
+            'question': 'Who is the author of the famous play "Hamlet"?',
+            'options': ['William Shakespeare', 'George Orwell', 'Jane Austen', 'Charles Dickens'],
+            'correct': 'A',
+            'reduced_options': ['William Shakespeare', 'Jane Austen'],
+            'reduced_correct': 'A',
+            'type': 'question'
+        }
+
         ]
-        self.questions['C'] = random.sample(level_c_questions, 8)
+        self.questions['C'] = random.sample(level_c_questions, 15)
 
 
     #this function handles the answer and updates a new question!   
@@ -232,6 +334,7 @@ class Game:
             else:
                 player['stage'] = 'A'
                 player['correct_answers'] = 0
+        
         elif player['stage'] == 'C':
             # if the player was correct on phase C then we need to jump one step up
             if player['board_step'] == 7:
@@ -245,7 +348,8 @@ class Game:
 
                 }
                 json_object = json.dumps(response)
-                player["connection"].sendall(json_object.encode()) 
+                player["connection"].send(json_object.encode()) 
+            
             if player['board_step'] <= self.chaser_step: # here i check if the chaser reached the player
                 print("player lost!!! chaser wins! :(")
                 message = "player lost!!! chaser wins! :("
@@ -257,7 +361,7 @@ class Game:
 
                 }
                 json_object = json.dumps(response)
-                player["connection"].sendall(json_object.encode())                
+                player["connection"].send(json_object.encode())                
                 
     def get_next_stage(self, current_stage):
         if current_stage == 'A':
@@ -307,7 +411,7 @@ def computer_move(options, correct_answer):
 def send_game_summary(sock):
     summary = "Game over!\n"
     summary += "Thank you for playing!"
-    sock.sendall(summary.encode())
+    sock.send(summary.encode())
 
 
 def accept_wrapper(sock, game):
@@ -342,7 +446,7 @@ def send_phaseB_message(conn, current_amount):
     }
     
     instructions_json = json.dumps(instructions)
-    conn.sendall(instructions_json.encode())
+    conn.send(instructions_json.encode())
 
 
 
@@ -355,7 +459,7 @@ def send_question(conn, question, player_id):
         data['lifeline'] = game.has_lifeline(player_id)
         data['stage'] = game.get_stage(player_id)
         data_json = json.dumps(data)
-        conn.sendall(data_json.encode())
+        conn.send(data_json.encode())
 
 def handle_question_response(sock, game, player_id, response):
     if str(response) == 'sos':
@@ -374,7 +478,7 @@ def handle_question_response(sock, game, player_id, response):
                 }
             }
             json_object = json.dumps(message)
-            sock.sendall(json_object.encode())
+            sock.send(json_object.encode())
     if game.get_stage(player_id) == "C":
         game.send_board_info(player_id)
     if next_question:
@@ -392,7 +496,7 @@ def handle_initial_response(sock, game, player_id, response):
         send_question(sock, game.get_current_question(player_id), player_id)
     else:
         # Player does not want to play, end the connection
-        sock.sendall("Thank you for playing!".encode())
+        sock.send("Thank you for playing!".encode())
         sel.unregister(sock)
         sock.close()
         game.remove_player(player_id)
@@ -462,7 +566,20 @@ try:
         events = sel.select(timeout=None)
         for key, mask in events:
             if key.data is None:
-                accept_wrapper(key.fileobj, game)
+                if len(game.players) < 3:
+                    accept_wrapper(key.fileobj, game)
+                else:
+                    sock, addr = lsock.accept()
+                    data = {
+                        "data" : {
+                            "type" : "reject",
+                            "message" : f"Rejected connection from {addr}\nConnection limit reached. Please try again later."
+                        }
+                    }
+                    reject_object = json.dumps(data)
+                    sock.send(reject_object.encode())
+                    sock.close()
+
             else:
                 service_connection(key, mask, game)
 

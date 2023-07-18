@@ -5,11 +5,11 @@ def main():
     host = "127.0.0.1"
     port = 65432
     print("Welcome to chaser game!\n")
-    yes_or_no = input("Would u like to play?")
-    if yes_or_no == "yes":
+    yes_or_no = input("Would u like to play?\nInput yes to continue: ")
+    if yes_or_no.lower() == "yes":
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((host, port))
-            sock.sendall("yes".encode())
+            sock.send("yes".encode())
             while True:
                 
                 # recieved data json
@@ -32,7 +32,7 @@ def main():
                     print(question_text)
                     answer = input("Enter your answer:")
                     if answer.lower() == 'sos' and received_data_dict['lifeline'] and received_data_dict['stage'] == 'C':
-                        sock.sendall("sos".encode())
+                        sock.send("sos".encode())
                         reduced_options = received_data_dict['data']['reduced_options']
                         print("Remaining options:")
                         for i, option in enumerate(reduced_options):
@@ -40,17 +40,17 @@ def main():
                         answer = input("Enter your answer: ")
 
                         if answer.lower() == received_data_dict['data']['reduced_correct'].lower():
-                            sock.sendall("correct".encode())
+                            sock.send("correct".encode())
                             print("Correct!\n")
                         else:
                             print("incorrect answer!\n")
-                            sock.sendall("incorrect_a".encode())
+                            sock.send("incorrect_a".encode())
                     elif answer.lower() == received_data_dict['data']['correct'].lower():
-                        sock.sendall("correct".encode())
+                        sock.send("correct".encode())
                         print("Correct!\n")
                     else:
                         print("Incorrect answer")
-                        sock.sendall("incorrect_c".encode())
+                        sock.send("incorrect_c".encode())
                 elif received_data_dict['data']['type'] == 'B':
                     # Access the individual fields based on their keys
                     message = received_data_dict["data"]["message"]
@@ -68,7 +68,7 @@ def main():
                         print("Value:", choice["value"])
                     choice = input("Enter your choice (2/3/4): ")
                     if choice == '2' or choice == '3' or choice == '4':
-                        sock.sendall(choice.encode())
+                        sock.send(choice.encode())
                     else:
                         print("u didnt enter choice")
                 elif received_data_dict["data"]["type"] == "game_over":
@@ -81,6 +81,10 @@ def main():
                 
                 elif received_data_dict['data']['type'] == "game_over":
                     break
+                elif received_data_dict['data']['type'] == 'reject':
+                    print(received_data_dict['data']['message'])
+                    break
+        
     else:
         print("\nWe hope to see u playing with us!")
 if __name__ == "__main__":
