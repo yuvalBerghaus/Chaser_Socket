@@ -21,7 +21,9 @@ class Game:
     def has_lifeline(self,player_id):
         return self.players[player_id]['lifeline']
     def get_money(self,player_id):
-        return self.players[player_id]['money']    
+        return self.players[player_id]['money']  
+    def get_stage(self,player_id):
+        return self.players[player_id]["stage"]  
     def add_player(self, player_id, connection):
         self.players[player_id] = {
             'stage': 'A',
@@ -251,7 +253,9 @@ def send_question(conn, question, player_id):
 
 def handle_question_response(sock, game, player_id, response):
     game.process_answer(player_id, response.lower())
-    next_question = game.get_current_question(player_id)
+    next_question = None
+    if game.get_stage(player_id) != "B":
+        next_question = game.get_current_question(player_id)
     if next_question:
         send_question(sock, next_question, player_id)
     else:
@@ -283,7 +287,7 @@ def handle_phase_B_response(sock,game,player_id,board_step):
     
     game.move_player_forward(player_id)
     # move to phase C #TODO
-
+    handle_question_response(sock,game,player_id,board_step)
 
 
 
