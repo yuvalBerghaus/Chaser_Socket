@@ -11,13 +11,15 @@ class Game:
     def __init__(self):
         self.players = {}
         self.chaser_stage = 0
+
         self.questions = {
             'A': [],
             'B': [],
             'C': [],
             'C+': []
         }
-        
+    def get_money(self,player_id):
+        return self.players[player_id]['money']    
     def add_player(self, player_id, connection):
         self.players[player_id] = {
             'stage': 'A',
@@ -25,12 +27,19 @@ class Game:
             'answered_count' : 0,
             'lifeline': True,
             'connection': connection,
-            'correct_answers' : 0
+            'correct_answers' : 0,
+            'board_step' : 1
         }
     
     def remove_player(self, player_id):
         del self.players[player_id]
     
+    def update_step_player(self, player_id, board_step):
+        self.players[player_id]['board_step'] = int(board_step)
+
+    def update_money(self, player_id, money):
+        self.players[player_id]['money'] = money
+
     def generate_questions(self):
         level_a_questions = [
             {
@@ -133,10 +142,7 @@ class Game:
         if str(answer).lower() == "correct":
             player['correct_answers'] += 1
             if player['stage'] == 'A':
-                if player['money'] == 0:
-                    player['money'] += 5000
-                else:
-                    player['money'] *= 2
+                player['money'] += 5000
         #else incorrect answer
         elif str(answer).lower() == "incorrect":
             #TODO - handle
@@ -253,8 +259,12 @@ def handle_initial_response(sock, game, player_id, response):
         game.remove_player(player_id)
 
 
-
-
+def handle_phase_B(sock,game,player_id,board_step):
+    game.update_step_player(player_id, board_step)
+    if board_step == '2':
+        game.update_money(player_id, game.get_money(player_id)*2) #TODO
+    elif board_step == '4':
+        game.update_money(player_id, game.get_money(player_id) / 2) #TODO
 def service_connection(key, mask, game):
     sock = key.fileobj
     data = key.data
@@ -271,6 +281,8 @@ def service_connection(key, mask, game):
                     handle_question_response(sock, game, player_id, message)
                 elif game.players[player_id]['stage'] == 'C+':
                     handle_game_over_response(sock, game, player_id, message)
+                elif game.players[player_id]['stage'] == 'B':
+                    handle_phase_B(sock,game,player_id,message)
                 else:
                     handle_question_response(sock, game, player_id, message)
 

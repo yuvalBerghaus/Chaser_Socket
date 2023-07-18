@@ -41,7 +41,15 @@ def main():
                     for choice in choices:
                         print("Step:", choice["step"])
                         print("Value:", choice["value"])
-                    
+                    choice = input("Enter your choice (2/3/4): ")
+                    if choice == '2' or choice == '3' or choice == '4':
+                        sock.sendall(choice.encode())
+                    else:
+                        print("u didnt enter choice")
+
+
+
+
                 elif received_data_dict['type'] == "game over":
                     break
     else:
