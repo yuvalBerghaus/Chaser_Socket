@@ -11,10 +11,16 @@ def main():
             sock.connect((host, port))
             sock.sendall("yes".encode())
             while True:
+                
                 # recieved data json
                 response = sock.recv(1024).decode()
                 # Deserialize the JSON string back into a hashmap
                 received_data_dict = json.loads(response)
+
+
+                if received_data_dict['data']['type'] == 'board_info':
+                    print(received_data_dict["data"]["messasge"])
+
                 if received_data_dict['data']['type'] == 'question':
                     question_text = received_data_dict['data']['question']
                     options = received_data_dict['data']['options']
@@ -69,11 +75,11 @@ def main():
                     print(received_data_dict["data"]["message"])
                     break
 
-                elif received_data_dict["data"]["type"] == "game_over":
+                elif received_data_dict["data"]["type"] == "win_game":
                     print(received_data_dict["data"]["message"])
                     break
                 
-                elif received_data_dict['type'] == "game over":
+                elif received_data_dict['data']['type'] == "game_over":
                     break
     else:
         print("\nWe hope to see u playing with us!")

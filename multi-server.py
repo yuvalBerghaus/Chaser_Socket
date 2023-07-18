@@ -17,6 +17,28 @@ class Game:
             'C': [],
             'C+': []
         }
+    def send_board_info(self, player_id):
+        player = self.players[player_id]
+        current_step = player['board_step']
+        chaser_step = game.chaser_step
+        message_type = "board_info"
+        current_money = player['money']
+        lifeline = player['lifeline']
+        # Prepare board info message
+        message = f"Money: {current_money} | Player_Stage: {current_step} | Chaser: {chaser_step} | Lifeline: {lifeline}\n"
+
+        board_info = {
+            "data" : {
+                "type" : message_type,
+                "messasge" : message
+            }
+        }
+
+        # Send board info to the player
+        conn = player['connection']
+        data = json.dumps(board_info)
+        conn.sendall(data.encode())
+
     def has_lifeline(self,player_id):
         return self.players[player_id]['lifeline']
     def get_step(self,player_id):
@@ -187,12 +209,15 @@ class Game:
                 player['money'] += 5000
             elif player['stage'] == "C":
                 player["board_step"] += 1
+                
+
                 # self.chaser_step += 1
         #else incorrect answer
         elif str(answer).lower() == "incorrect_c" and player['stage'] == 'C':
             #TODO - handle
             print("incorrect!")
             self.chaser_step += 1
+            
         player['answered_count'] += 1
 
         # handle stage to stage!
@@ -252,18 +277,6 @@ class Game:
         # Update player's stage and position
         player['stage'] = next_stage
 
-    def send_board_info(self, player_id):
-        player = self.players[player_id]
-        current_stage = player['stage']
-        current_money = player['money']
-        lifeline = player['lifeline']
-        
-        # Prepare board info message
-        board_info = f"Money: {current_money} | Stage: {current_stage} | Chaser: {self.chaser_stage} | Lifeline: {lifeline}\n"
-        
-        # Send board info to the player
-        conn = player['connection']
-        conn.sendall(board_info.encode())
     
     def handle_sos(self, player_id):
         self.players[player_id]['lifeline'] = False
@@ -278,6 +291,18 @@ class Game:
             return self.questions[current_stage][current_question_index]
         else:
             return None
+
+# this move 
+def computer_move(options, correct_answer):
+    # Randomly choose the correct answer 75% of the time
+    if random.random() < 0.75:
+        answer = correct_answer
+    else:
+        # Choose a random incorrect answer
+        options.remove(correct_answer)
+        answer = random.choice(options)
+    return answer
+
 
 def send_game_summary(sock):
     summary = "Game over!\n"
@@ -337,6 +362,7 @@ def handle_question_response(sock, game, player_id, response):
         game.handle_sos(player_id)
         return
     game.process_answer(player_id, response.lower())
+
     next_question = None
     if game.get_stage(player_id) != "B":
         next_question = game.get_current_question(player_id)
@@ -349,7 +375,10 @@ def handle_question_response(sock, game, player_id, response):
             }
             json_object = json.dumps(message)
             sock.sendall(json_object.encode())
+    if game.get_stage(player_id) == "C":
+        game.send_board_info(player_id)
     if next_question:
+        
         send_question(sock, next_question, player_id)
     elif game.get_stage(player_id) == "B":
         print("")
@@ -397,8 +426,6 @@ def service_connection(key, mask, game):
             if player_id in game.players:
                 if message.lower() == 'yes':
                     handle_initial_response(sock, game, player_id, message)
-                elif game.players[player_id]['stage'] == 'C+':
-                    handle_game_over_response(sock, game, player_id, message)
                 elif message.lower() == '2' or message.lower() == '3' or message.lower() == '4':
                     handle_phase_B_response(sock, game , player_id , message)
                 else:
