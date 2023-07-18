@@ -15,23 +15,37 @@ def main():
                 response = sock.recv(1024).decode()
                 # Deserialize the JSON string back into a hashmap
                 received_data_dict = json.loads(response)
-                if received_data_dict['type'] == 'question':
-                    question_text = received_data_dict['question']
-                    options = received_data_dict['options']
+                if received_data_dict['data']['type'] == 'question':
+                    question_text = received_data_dict['data']['question']
+                    options = received_data_dict['data']['options']
                     question_text += "\n"
                     for i, option in enumerate(options):
                         question_text += f"{chr(ord('A')+i)}) {option}\n"
                     print(question_text)
+
+                    if received_data_dict['lifeline'] == True:
+                        question_text += "input SOS to use lifeline\n"
                     answer = input("Enter your answer:")
-                    if answer.lower() == received_data_dict['correct'].lower():
+                    if answer.lower() == 'sos' and received_data_dict['lifeline']:
+                        reduced_options = received_data_dict['data']['reduced_options']
+                        print("Remaining options:")
+                        for i, option in enumerate(reduced_options):
+                            print(f"{chr(ord('A')+i)}) {option}")
+                        answer = input("Enter your answer: ")
+
+                        if answer.lower() == received_data_dict['data']['correct'].lower():
+                            sock.sendall("correct".encode())
+                            print("Correct!")
+
+                    elif answer.lower() == received_data_dict['data']['correct'].lower():
                         sock.sendall("correct".encode())
                         print("Correct!")
-                elif received_data_dict['type'] == 'B':
+                elif received_data_dict['data']['type'] == 'B':
                     # Access the individual fields based on their keys
-                    message = received_data_dict["message"]
-                    type = received_data_dict["type"]
-                    current_amount = received_data_dict["current_amount"]
-                    choices = received_data_dict["choices"]
+                    message = received_data_dict["data"]["message"]
+                    type = received_data_dict["data"]["type"]
+                    current_amount = received_data_dict["data"]["current_amount"]
+                    choices = received_data_dict["data"]["choices"]
 
                     # Print the extracted values
                     print("Message:", message)

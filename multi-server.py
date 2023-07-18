@@ -18,6 +18,8 @@ class Game:
             'C': [],
             'C+': []
         }
+    def has_lifeline(self,player_id):
+        return self.players[player_id]['lifeline']
     def get_money(self,player_id):
         return self.players[player_id]['money']    
     def add_player(self, player_id, connection):
@@ -74,6 +76,7 @@ class Game:
                 'question': 'What is the capital city of Australia?',
                 'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
                 'correct': 'B',
+                'reduced_options' : ['Canberra','Perth'],
                 'type' : 'question'
             },
             {
@@ -81,13 +84,15 @@ class Game:
                 'question': 'Which country is famous for the Taj Mahal?',
                 'options': ['India', 'China', 'Egypt', 'Italy'],
                 'correct': 'A',
-                'type' : 'question'
+                'type' : 'question',
+                'reduced_options' : ['India','Egypt'],
             },
             {
                 'id' : 3,
                 'question': 'Who wrote the novel "1984"?',
                 'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
                 'correct': 'A',
+                'reduced_options' : ['George Orwell','Jane Austen'],
                 'type' : 'question'
             }
         ]
@@ -100,19 +105,25 @@ class Game:
                 'question': 'Who wrote the play "Romeo and Juliet"?',
                 'options': ['William Shakespeare', 'Charles Dickens', 'Jane Austen', 'F. Scott Fitzgerald'],
                 'correct': 'A',
+                'reduced_options' : ['William Shakespeare','Jane Austen'],
+                'reduced_correct' : 'A',
                 'type' : 'question'
             },
             {
                 'id' : 2,
                 'question': 'Which animal is the largest living mammal?',
                 'options': ['Blue whale', 'African elephant', 'Giraffe', 'Hippopotamus'],
+                'reduced_options' : ['Blue whale','African elephant'],
                 'correct': 'A',
+                'reduced_correct' : 'A',
                 'type' : 'question'
             },
             {
                 'id' : 3,
                 'question': 'What is the largest organ in the human body?',
                 'options': ['Liver', 'Heart', 'Skin', 'Brain'],
+                'reduced_options' : ['Skin','Brain'],
+                'reduced_correct' : 'A',
                 'correct': 'C',
                 'type' : 'question'
             }
@@ -150,7 +161,7 @@ class Game:
         player['answered_count'] += 1
 
         # handle stage to stage!
-        if player['answered_count'] == 4 and player['stage'] == 'A':
+        if player['answered_count'] == 3 and player['stage'] == 'A':
             if player['correct_answers'] > 0:
                 #TODO - check if he was on stage A and if he was then send him the options of how much he wants to continue with - 2*current_amount or current_amount/2 or current
                 self.move_player_forward(player_id)
@@ -183,7 +194,7 @@ class Game:
         player = self.players[player_id]
         current_stage = player['stage']
         # current_question_index = self.get_stage_position(current_stage, player['answered_count']) - 1
-        current_question_index = player['answered_count']-1
+        current_question_index = player['answered_count']
         if len(self.questions[current_stage]) > current_question_index:
             return self.questions[current_stage][current_question_index]
         else:
@@ -210,14 +221,16 @@ def send_phaseB_message(conn, current_amount):
     double = current_amount * 2
     
     instructions = {
-        "message": "Congratz!",
+        "data": {
         "type" : "B",
+        "message": "Congratz!",
         "current_amount": current_amount,
         "choices": [
             {"step": 2, "value": double},
             {"step": 3, "value": current_amount},
             {"step": 4, "value": divided}
         ]
+        }
     }
     
     instructions_json = json.dumps(instructions)
@@ -225,21 +238,22 @@ def send_phaseB_message(conn, current_amount):
 
 
 
-def send_question(conn, question):
+def send_question(conn, question, player_id):
     if question is None:
         send_game_summary(conn)
     else:
-        data_json = json.dumps(question)
+        data = {}
+        data['data'] = question
+        data['lifeline'] = game.has_lifeline(player_id)
+        data_json = json.dumps(data)
         conn.sendall(data_json.encode())
 
 
 def handle_question_response(sock, game, player_id, response):
-    current_stage = game.players[player_id]['stage']
-    current_question = game.get_current_question(player_id)
     game.process_answer(player_id, response.lower())
     next_question = game.get_current_question(player_id)
     if next_question:
-        send_question(sock, next_question)
+        send_question(sock, next_question, player_id)
     else:
         print("GAME OVER")
 
@@ -249,7 +263,7 @@ def handle_initial_response(sock, game, player_id, response):
     if response.lower() == 'yes':
         # Player wants to play, generate questions and send Level A question
         game.generate_questions()
-        # send_question(sock, game.get_current_question(player_id))
+        send_question(sock, game.get_current_question(player_id), player_id)
     else:
         # Player does not want to play, end the connection
         sock.sendall("Thank you for playing!".encode())
@@ -286,7 +300,6 @@ def service_connection(key, mask, game):
             if player_id in game.players:
                 if message.lower() == 'yes':
                     handle_initial_response(sock, game, player_id, message)
-                    handle_question_response(sock, game, player_id, message)
                 elif game.players[player_id]['stage'] == 'C+':
                     handle_game_over_response(sock, game, player_id, message)
                 elif message.lower() == '2' or message.lower() == '3' or message.lower() == '4':
