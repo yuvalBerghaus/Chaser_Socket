@@ -27,18 +27,21 @@ class Game:
         # Prepare board info message
         message = f"Money: {current_money} | Player_Stage: {current_step} | Chaser: {chaser_step} | Lifeline: {lifeline}\n"
 
-        board_info = {
-            "data" : {
-                "type" : message_type,
-                "messasge" : message
-            }
-        }
-
         # Send board info to the player
         conn = player['connection']
-        data = json.dumps(board_info)
 
-        conn.send(data.encode())
+        conn.send(message.encode())
+
+    def get_board_info(self, player_id):
+        player = self.players[player_id]
+        current_step = player['board_step']
+        chaser_step = game.chaser_step
+        message_type = "board_info"
+        current_money = player['money']
+        lifeline = player['lifeline']
+        # Prepare board info message
+        message = f"Money: {current_money} | Player_Stage: {current_step} | Chaser: {chaser_step} | Lifeline: {lifeline}\n"
+        return message
 
     def has_lifeline(self,player_id):
         return self.players[player_id]['lifeline']
@@ -347,6 +350,7 @@ class Game:
                     }
 
                 }
+                print(response)
                 json_object = json.dumps(response)
                 player["connection"].send(json_object.encode()) 
             
@@ -360,6 +364,7 @@ class Game:
                     }
 
                 }
+                print(response)
                 json_object = json.dumps(response)
                 player["connection"].send(json_object.encode())                
                 
@@ -480,7 +485,8 @@ def handle_question_response(sock, game, player_id, response):
             json_object = json.dumps(message)
             sock.send(json_object.encode())
     if game.get_stage(player_id) == "C":
-        game.send_board_info(player_id)
+        print(game.get_board_info(player_id))
+
     if next_question:
         
         send_question(sock, next_question, player_id)

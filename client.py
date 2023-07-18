@@ -2,6 +2,7 @@ import json
 import socket
 
 def main():
+    flag = True
     host = "127.0.0.1"
     port = 65432
     print("Welcome to chaser game!\n")
@@ -11,15 +12,12 @@ def main():
             sock.connect((host, port))
             sock.send("yes".encode())
             while True:
-                
                 # recieved data json
                 response = sock.recv(1024).decode()
+                # print(response) #TODO - a very important print!!!!!
                 # Deserialize the JSON string back into a hashmap
                 received_data_dict = json.loads(response)
 
-
-                if received_data_dict['data']['type'] == 'board_info':
-                    print(received_data_dict["data"]["messasge"])
 
                 if received_data_dict['data']['type'] == 'question':
                     question_text = received_data_dict['data']['question']
