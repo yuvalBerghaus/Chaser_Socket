@@ -69,6 +69,10 @@ def main():
                     print(received_data_dict["data"]["message"])
                     break
 
+                elif received_data_dict["data"]["type"] == "game_over":
+                    print(received_data_dict["data"]["message"])
+                    break
+                
                 elif received_data_dict['type'] == "game over":
                     break
     else:

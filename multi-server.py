@@ -74,33 +74,33 @@ class Game:
 
         
         # Level B questions
-        level_b_questions = [
-            {
-                'id' : 1,
-                'question': 'What is the capital city of Australia?',
-                'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
-                'correct': 'B',
-                'reduced_options' : ['Canberra','Perth'],
-                'type' : 'question'
-            },
-            {
-                'id' : 2,
-                'question': 'Which country is famous for the Taj Mahal?',
-                'options': ['India', 'China', 'Egypt', 'Italy'],
-                'correct': 'A',
-                'type' : 'question',
-                'reduced_options' : ['India','Egypt'],
-            },
-            {
-                'id' : 3,
-                'question': 'Who wrote the novel "1984"?',
-                'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
-                'correct': 'A',
-                'reduced_options' : ['George Orwell','Jane Austen'],
-                'type' : 'question'
-            }
-        ]
-        self.questions['B'] = random.sample(level_b_questions, 3)
+        # level_b_questions = [
+        #     {
+        #         'id' : 1,
+        #         'question': 'What is the capital city of Australia?',
+        #         'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
+        #         'correct': 'B',
+        #         'reduced_options' : ['Canberra','Perth'],
+        #         'type' : 'question'
+        #     },
+        #     {
+        #         'id' : 2,
+        #         'question': 'Which country is famous for the Taj Mahal?',
+        #         'options': ['India', 'China', 'Egypt', 'Italy'],
+        #         'correct': 'A',
+        #         'type' : 'question',
+        #         'reduced_options' : ['India','Egypt'],
+        #     },
+        #     {
+        #         'id' : 3,
+        #         'question': 'Who wrote the novel "1984"?',
+        #         'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
+        #         'correct': 'A',
+        #         'reduced_options' : ['George Orwell','Jane Austen'],
+        #         'type' : 'question'
+        #     }
+        # ]
+        # self.questions['B'] = random.sample(level_b_questions, 3)
         
         # Level C questions
         level_c_questions = [
@@ -146,26 +146,37 @@ class Game:
                 'correct': 'A',
                 'reduced_correct' : 'A',
                 'type' : 'question'
-            }           
-        ]
-        self.questions['C'] = random.sample(level_c_questions, 3)
-        
-        # Level C+ questions
-        level_c_plus_questions = [
+            },
             {
-                'question': 'What is the chemical symbol for gold?',
-                'options': ['Au', 'Ag', 'Fe', 'Hg'],
-                'correct': 'A',
+                'id' : 1,
+                'question': 'What is the capital city of Australia?',
+                'options': ['Sydney', 'Canberra', 'Melbourne', 'Perth'],
+                'correct': 'B',
+                'reduced_correct' : 'A',
+                'reduced_options' : ['Canberra','Perth'],
                 'type' : 'question'
             },
             {
-                'question': 'Who discovered penicillin?',
-                'options': ['Alexander Fleming', 'Marie Curie', 'Albert Einstein', 'Isaac Newton'],
+                'id' : 2,
+                'question': 'Which country is famous for the Taj Mahal?',
+                'options': ['India', 'China', 'Egypt', 'Italy'],
                 'correct': 'A',
+                'reduced_correct' : 'A',
+                'type' : 'question',
+                'reduced_options' : ['India','Egypt'],
+            },
+            {
+                'id' : 3,
+                'question': 'Who wrote the novel "1984"?',
+                'options': ['George Orwell', 'J.R.R. Tolkien', 'Jane Austen', 'F. Scott Fitzgerald'],
+                'correct': 'A',
+                'reduced_correct' : 'A',
+                'reduced_options' : ['George Orwell','Jane Austen'],
                 'type' : 'question'
-            }
+            }         
         ]
-        self.questions['C+'] = random.sample(level_c_plus_questions, 2)
+        self.questions['C'] = random.sample(level_c_questions, 8)
+
 
     #this function handles the answer and updates a new question!   
     def process_answer(self, player_id, answer):
@@ -176,7 +187,7 @@ class Game:
                 player['money'] += 5000
             elif player['stage'] == "C":
                 player["board_step"] += 1
-                self.chaser_step += 1
+                # self.chaser_step += 1
         #else incorrect answer
         elif str(answer).lower() == "incorrect_c" and player['stage'] == 'C':
             #TODO - handle
@@ -198,10 +209,18 @@ class Game:
                 player['correct_answers'] = 0
         elif player['stage'] == 'C':
             # if the player was correct on phase C then we need to jump one step up
-            if answer == "correct":
-                player['board_step'] += 1
             if player['board_step'] == 7:
                 print("player wins!!!!")
+                message = "The player won the game!!!! good job! :)"
+                response = {
+                    "data" : {
+                        "type" : "win_game",
+                        "message" : message
+                    }
+
+                }
+                json_object = json.dumps(response)
+                player["connection"].sendall(json_object.encode()) 
             if player['board_step'] <= self.chaser_step: # here i check if the chaser reached the player
                 print("player lost!!! chaser wins! :(")
                 message = "player lost!!! chaser wins! :("
