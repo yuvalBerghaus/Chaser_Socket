@@ -170,7 +170,7 @@ class Game:
     #this function handles the answer and updates a new question!   
     def process_answer(self, player_id, answer):
         player = self.players[player_id]
-        if str(answer).lower() == "correct_a":
+        if str(answer).lower() == "correct":
             player['correct_answers'] += 1
             if player['stage'] == 'A':
                 player['money'] += 5000
@@ -178,9 +178,6 @@ class Game:
                 player["board_step"] += 1
                 self.chaser_step += 1
         #else incorrect answer
-        elif str(answer).lower() == "sos":
-            game.turn_off_lifeline(player_id)
-            return
         elif str(answer).lower() == "incorrect_c" and player['stage'] == 'C':
             #TODO - handle
             print("incorrect!")
@@ -200,9 +197,12 @@ class Game:
                 player['stage'] = 'A'
                 player['correct_answers'] = 0
         elif player['stage'] == 'C':
+            # if the player was correct on phase C then we need to jump one step up
+            if answer == "correct":
+                player['board_step'] += 1
             if player['board_step'] == 7:
                 print("player wins!!!!")
-            if player['board_step'] == self.chaser_step: # here i check if the chaser reached the player
+            if player['board_step'] <= self.chaser_step: # here i check if the chaser reached the player
                 print("player lost!!! chaser wins! :(")
                 message = "player lost!!! chaser wins! :("
                 response = {
@@ -213,8 +213,7 @@ class Game:
 
                 }
                 json_object = json.dumps(response)
-                player["connection"].sendall(json_object.encode())
-                
+                player["connection"].sendall(json_object.encode())                
                 
     def get_next_stage(self, current_stage):
         if current_stage == 'A':
@@ -247,6 +246,8 @@ class Game:
         conn = player['connection']
         conn.sendall(board_info.encode())
     
+    def handle_sos(self, player_id):
+        self.players[player_id]['lifeline'] = False
 
 
     def get_current_question(self, player_id):
@@ -313,11 +314,14 @@ def send_question(conn, question, player_id):
         conn.sendall(data_json.encode())
 
 def handle_question_response(sock, game, player_id, response):
+    if str(response) == 'sos':
+        game.handle_sos(player_id)
+        return
     game.process_answer(player_id, response.lower())
     next_question = None
     if game.get_stage(player_id) != "B":
         next_question = game.get_current_question(player_id)
-        if game.chaser_step == game.get_step(player_id) and game.get_stage(player_id) == "C":
+        if game.chaser_step >= game.get_step(player_id) and game.get_stage(player_id) == "C":
             message = {
                 "data" : {
                     "type" : "game_over",
@@ -328,8 +332,8 @@ def handle_question_response(sock, game, player_id, response):
             sock.sendall(json_object.encode())
     if next_question:
         send_question(sock, next_question, player_id)
-    else:
-        print("GAME OVER")
+    elif game.get_stage(player_id) == "B":
+        print("")
 
 
 

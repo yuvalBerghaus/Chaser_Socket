@@ -40,7 +40,7 @@ def main():
                             print("incorrect answer!\n")
                             sock.sendall("incorrect_a".encode())
                     elif answer.lower() == received_data_dict['data']['correct'].lower():
-                        sock.sendall("correct_a".encode())
+                        sock.sendall("correct".encode())
                         print("Correct!\n")
                     else:
                         print("Incorrect answer")
