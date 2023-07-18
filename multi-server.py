@@ -154,6 +154,9 @@ class Game:
             if player['correct_answers'] > 0:
                 #TODO - check if he was on stage A and if he was then send him the options of how much he wants to continue with - 2*current_amount or current_amount/2 or current
                 self.move_player_forward(player_id)
+                if self.players[player_id]['stage'] == 'B':
+                    # WHEN THE PLAYER GETS TO PHASE B IM ASKING HIM IF HE WANTS TO DOUBLE OR CURRENT OR DIVIDED 
+                    send_phaseB_message(game.players[player_id]['connection'],game.players[player_id]['money'])
             #meaning that he didnt answer any of the questions right
             else:
                 player['stage'] = 'A'
@@ -234,15 +237,11 @@ def handle_question_response(sock, game, player_id, response):
     current_stage = game.players[player_id]['stage']
     current_question = game.get_current_question(player_id)
     game.process_answer(player_id, response.lower())
-    # WHEN THE PLAYER GETS TO PHASE B IM ASKING HIM IF HE WANTS TO DOUBLE OR CURRENT OR DIVIDED 
-    if game.players[player_id]['stage'] == 'B':
-        send_phaseB_message(sock,game.players[player_id]['money'])
+    next_question = game.get_current_question(player_id)
+    if next_question:
+        send_question(sock, next_question)
     else:
-        next_question = game.get_current_question(player_id)
-        if next_question:
-            send_question(sock, next_question)
-        else:
-            print("GAME OVER")
+        print("GAME OVER")
 
 
 
@@ -259,12 +258,21 @@ def handle_initial_response(sock, game, player_id, response):
         game.remove_player(player_id)
 
 
-def handle_phase_B(sock,game,player_id,board_step):
+def handle_phase_B_response(sock,game,player_id,board_step):
+    # updating the step of the player in the board
     game.update_step_player(player_id, board_step)
+    # updating money of the player in the board
     if board_step == '2':
-        game.update_money(player_id, game.get_money(player_id)*2) #TODO
+        game.update_money(player_id, game.get_money(player_id) * 2) #TODO
     elif board_step == '4':
         game.update_money(player_id, game.get_money(player_id) / 2) #TODO
+    
+    game.move_player_forward(player_id)
+    # move to phase C #TODO
+
+
+
+
 def service_connection(key, mask, game):
     sock = key.fileobj
     data = key.data
@@ -281,8 +289,8 @@ def service_connection(key, mask, game):
                     handle_question_response(sock, game, player_id, message)
                 elif game.players[player_id]['stage'] == 'C+':
                     handle_game_over_response(sock, game, player_id, message)
-                elif game.players[player_id]['stage'] == 'B':
-                    handle_phase_B(sock,game,player_id,message)
+                elif message.lower() == '2' or message.lower() == '3' or message.lower() == '4':
+                    handle_phase_B_response(sock, game , player_id , message)
                 else:
                     handle_question_response(sock, game, player_id, message)
 
