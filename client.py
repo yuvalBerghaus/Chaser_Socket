@@ -21,19 +21,19 @@ def main():
                     question_text += "\n"
                     for i, option in enumerate(options):
                         question_text += f"{chr(ord('A')+i)}) {option}\n"
-                    print(question_text)
-
-                    if received_data_dict['lifeline'] == True:
+                    if received_data_dict['lifeline'] == True and received_data_dict['stage'] == 'C':
                         question_text += "input SOS to use lifeline\n"
+                    print(question_text)
                     answer = input("Enter your answer:")
-                    if answer.lower() == 'sos' and received_data_dict['lifeline']:
+                    if answer.lower() == 'sos' and received_data_dict['lifeline'] and received_data_dict['stage'] == 'C':
+                        sock.sendall("sos".encode())
                         reduced_options = received_data_dict['data']['reduced_options']
                         print("Remaining options:")
                         for i, option in enumerate(reduced_options):
                             print(f"{chr(ord('A')+i)}) {option}")
                         answer = input("Enter your answer: ")
 
-                        if answer.lower() == received_data_dict['data']['correct'].lower():
+                        if answer.lower() == received_data_dict['data']['reduced_correct'].lower():
                             sock.sendall("correct".encode())
                             print("Correct!")
 

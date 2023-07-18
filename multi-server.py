@@ -34,7 +34,8 @@ class Game:
             'correct_answers' : 0,
             'board_step' : 1
         }
-    
+    def turn_off_lifeline(self,player_id):
+        self.players[player_id]['lifeline'] = False
     def remove_player(self, player_id):
         del self.players[player_id]
     
@@ -156,7 +157,11 @@ class Game:
             player['correct_answers'] += 1
             if player['stage'] == 'A':
                 player['money'] += 5000
+            elif player['stage'] == "C":
+                player["board_step"] += 1
         #else incorrect answer
+        elif str(answer).lower() == "sos":
+            game.turn_off_lifeline(player_id)
         elif str(answer).lower() == "incorrect":
             #TODO - handle
             print("incorrect!")
@@ -247,6 +252,7 @@ def send_question(conn, question, player_id):
         data = {}
         data['data'] = question
         data['lifeline'] = game.has_lifeline(player_id)
+        data['stage'] = game.get_stage(player_id)
         data_json = json.dumps(data)
         conn.sendall(data_json.encode())
 
