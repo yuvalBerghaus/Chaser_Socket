@@ -35,11 +35,16 @@ def main():
 
                         if answer.lower() == received_data_dict['data']['reduced_correct'].lower():
                             sock.sendall("correct".encode())
-                            print("Correct!")
-
+                            print("Correct!\n")
+                        else:
+                            print("incorrect answer!\n")
+                            sock.sendall("incorrect_a".encode())
                     elif answer.lower() == received_data_dict['data']['correct'].lower():
-                        sock.sendall("correct".encode())
-                        print("Correct!")
+                        sock.sendall("correct_a".encode())
+                        print("Correct!\n")
+                    else:
+                        print("Incorrect answer")
+                        sock.sendall("incorrect_c".encode())
                 elif received_data_dict['data']['type'] == 'B':
                     # Access the individual fields based on their keys
                     message = received_data_dict["data"]["message"]
@@ -60,9 +65,9 @@ def main():
                         sock.sendall(choice.encode())
                     else:
                         print("u didnt enter choice")
-
-
-
+                elif received_data_dict["data"]["type"] == "game_over":
+                    print(received_data_dict["data"]["message"])
+                    break
 
                 elif received_data_dict['type'] == "game over":
                     break

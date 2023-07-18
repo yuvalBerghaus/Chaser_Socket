@@ -10,8 +10,7 @@ sel = selectors.DefaultSelector()
 class Game:
     def __init__(self):
         self.players = {}
-        self.chaser_stage = 0
-
+        self.chaser_step = 1
         self.questions = {
             'A': [],
             'B': [],
@@ -20,6 +19,8 @@ class Game:
         }
     def has_lifeline(self,player_id):
         return self.players[player_id]['lifeline']
+    def get_step(self,player_id):
+        return self.players[player_id]['board_step']
     def get_money(self,player_id):
         return self.players[player_id]['money']  
     def get_stage(self,player_id):
@@ -122,6 +123,14 @@ class Game:
                 'type' : 'question'
             },
             {
+                'question': 'What is the chemical symbol for gold?',
+                'options': ['Au', 'Ag', 'Fe', 'Hg'],
+                'correct': 'A',
+                'reduced_options' : ['Au','Fe'],
+                'reduced_correct' : 'A',
+                'type' : 'question'
+            },
+            {
                 'id' : 3,
                 'question': 'What is the largest organ in the human body?',
                 'options': ['Liver', 'Heart', 'Skin', 'Brain'],
@@ -129,7 +138,15 @@ class Game:
                 'reduced_correct' : 'A',
                 'correct': 'C',
                 'type' : 'question'
-            }
+            },
+            {
+                'question': 'Who discovered penicillin?',
+                'options': ['Alexander Fleming', 'Marie Curie', 'Albert Einstein', 'Isaac Newton'],
+                'reduced_options' : ['Alexander Fleming','Albert Einstein'],
+                'correct': 'A',
+                'reduced_correct' : 'A',
+                'type' : 'question'
+            }           
         ]
         self.questions['C'] = random.sample(level_c_questions, 3)
         
@@ -153,18 +170,21 @@ class Game:
     #this function handles the answer and updates a new question!   
     def process_answer(self, player_id, answer):
         player = self.players[player_id]
-        if str(answer).lower() == "correct":
+        if str(answer).lower() == "correct_a":
             player['correct_answers'] += 1
             if player['stage'] == 'A':
                 player['money'] += 5000
             elif player['stage'] == "C":
                 player["board_step"] += 1
+                self.chaser_step += 1
         #else incorrect answer
         elif str(answer).lower() == "sos":
             game.turn_off_lifeline(player_id)
-        elif str(answer).lower() == "incorrect":
+            return
+        elif str(answer).lower() == "incorrect_c" and player['stage'] == 'C':
             #TODO - handle
             print("incorrect!")
+            self.chaser_step += 1
         player['answered_count'] += 1
 
         # handle stage to stage!
@@ -178,7 +198,24 @@ class Game:
             #meaning that he didnt answer any of the questions right
             else:
                 player['stage'] = 'A'
+                player['correct_answers'] = 0
+        elif player['stage'] == 'C':
+            if player['board_step'] == 7:
+                print("player wins!!!!")
+            if player['board_step'] == self.chaser_step: # here i check if the chaser reached the player
+                print("player lost!!! chaser wins! :(")
+                message = "player lost!!! chaser wins! :("
+                response = {
+                    "data" : {
+                        "type" : "game_over",
+                        "message" : message
+                    }
 
+                }
+                json_object = json.dumps(response)
+                player["connection"].sendall(json_object.encode())
+                
+                
     def get_next_stage(self, current_stage):
         if current_stage == 'A':
             return 'B'
@@ -197,6 +234,21 @@ class Game:
         # Update player's stage and position
         player['stage'] = next_stage
 
+    def send_board_info(self, player_id):
+        player = self.players[player_id]
+        current_stage = player['stage']
+        current_money = player['money']
+        lifeline = player['lifeline']
+        
+        # Prepare board info message
+        board_info = f"Money: {current_money} | Stage: {current_stage} | Chaser: {self.chaser_stage} | Lifeline: {lifeline}\n"
+        
+        # Send board info to the player
+        conn = player['connection']
+        conn.sendall(board_info.encode())
+    
+
+
     def get_current_question(self, player_id):
         player = self.players[player_id]
         current_stage = player['stage']
@@ -207,6 +259,10 @@ class Game:
         else:
             return None
 
+def send_game_summary(sock):
+    summary = "Game over!\n"
+    summary += "Thank you for playing!"
+    sock.sendall(summary.encode())
 
 
 def accept_wrapper(sock, game):
@@ -256,12 +312,20 @@ def send_question(conn, question, player_id):
         data_json = json.dumps(data)
         conn.sendall(data_json.encode())
 
-
 def handle_question_response(sock, game, player_id, response):
     game.process_answer(player_id, response.lower())
     next_question = None
     if game.get_stage(player_id) != "B":
         next_question = game.get_current_question(player_id)
+        if game.chaser_step == game.get_step(player_id) and game.get_stage(player_id) == "C":
+            message = {
+                "data" : {
+                    "type" : "game_over",
+                    "message" : "GAME OVER - CHASER WINS!"
+                }
+            }
+            json_object = json.dumps(message)
+            sock.sendall(json_object.encode())
     if next_question:
         send_question(sock, next_question, player_id)
     else:
